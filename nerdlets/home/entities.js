@@ -249,7 +249,7 @@ export default class Entities extends React.Component {
         }
         {
           entityAlertConfig.length == 0 && !fetchingAlerts ?
-          <h4>This entity has not triggered any alerts in the past 13 months.</h4>
+          <h4>This entity has not triggered any alerts in the past 6 months.</h4>
           :
           ''
         }
