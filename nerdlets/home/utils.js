@@ -4,7 +4,7 @@ module.exports = {
       return `
         {
         actor {
-          entitySearch(query: "reporting='true' and alertSeverity != 'NOT_CONFIGURED' and type not in ('DASHBOARD', 'WORKFLOW', 'CONDITION', 'SECURE_CRED', 'ENDPOINT')") {
+          entitySearch(query: "reporting='true' and alertSeverity != 'NOT_CONFIGURED' and type not in ('DASHBOARD', 'WORKFLOW', 'CONDITION', 'SECURE_CRED', 'ENDPOINT', 'ISSUE', 'POLICY')") {
             counts(facet: TYPE) {
               facet
               count
@@ -27,7 +27,7 @@ module.exports = {
     return `
       {
         actor {
-          entitySearch(query: "reporting='true' and alertSeverity != 'NOT_CONFIGURED' and type not in ('DASHBOARD', 'WORKFLOW', 'CONDITION', 'SECURE_CRED', 'ENDPOINT')") {
+          entitySearch(query: "reporting='true' and alertSeverity != 'NOT_CONFIGURED' and type not in ('DASHBOARD', 'WORKFLOW', 'CONDITION', 'SECURE_CRED', 'ENDPOINT', 'ISSUE', 'POLICY')") {
             counts(facet: TYPE) {
               facet
               count

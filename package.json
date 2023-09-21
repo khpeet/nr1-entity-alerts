@@ -1,13 +1,13 @@
 {
     "private": true,
     "name": "nr1-entity-alerts",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "scripts": {
         "start": "nr1 nerdpack:serve",
         "test": "exit 0"
     },
     "nr1": {
-        "uuid": "33dbc8e7-3c05-4e6e-abbd-f8a6373d3407"
+        "uuid": "fbd5593d-3657-451b-81a7-62425822cdf6"
     },
     "dependencies": {
         "lodash": "^4.17.21",
