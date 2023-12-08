@@ -20,7 +20,8 @@ export default class Entities extends React.Component {
       openDrilldown: false,
       fetchingAlerts: false,
       entityAlertConfig: [],
-      selectedEntity: null
+      selectedEntity: null,
+      policies: []
     };
 
     this.handleChange = this.handleChange.bind(this);
@@ -31,6 +32,7 @@ export default class Entities extends React.Component {
     let cursor = null;
     let allEntities = [];
     await this.getEntities(cursor, allEntities);
+    await this.getPolicies(2981243);
   }
 
   handleChange(e, { value }) {
@@ -74,6 +76,18 @@ export default class Entities extends React.Component {
     )
   }
 
+  async getPolicies(acct) {
+    let res = await NerdGraphQuery.query({query: query.policies(acct)});
+
+    if (res.errors) {
+      console.debug(`Failed to retrieve policies`);
+      console.debug(res.errors);
+    } else {
+      let p = res.data.actor.account.alerts.policiesSearch.policies;
+      this.setState({ policies: p });
+    }
+  }
+
   async getEntities(c, allEntities) {
     let res = await NerdGraphQuery.query({query: query.allEntities(c)});
 
@@ -99,16 +113,50 @@ export default class Entities extends React.Component {
     }
   }
 
-  async getAlerts(entity) {
-    let res = await NerdGraphQuery.query({query: query.incidentCount(entity)});
+  async getConditions(entity) {
+    let res = await NerdGraphQuery.query({query: query.conditionIds(entity)});
 
     if (res.errors) {
-      console.debug(`Failed to retrieve alerts`);
+      console.debug(`Failed to retrieve condition ids`);
       console.debug(res.errors);
     } else {
-      let alerts = res.data.actor.account.nrql.results;
-      return alerts;
+      let c = res.data.actor.account.nrql.results[0];
+      let formattedConditions = null;
+      if (c.conditions.length > 0) {
+        formattedConditions = `(${c.conditions.map(value => `'${value}'`).join(',')})`
+      }
+      return formattedConditions;
     }
+  }
+
+  async getConditionDetail(conditions) {
+    let res = await NerdGraphQuery.query({query: query.conditionDetail(conditions)});
+
+    if (res.errors) {
+      console.debug(`Failed to retrieve condition detail`);
+      console.debug(res.errors);
+    } else {
+      let detail = res.data.actor.entitySearch.results.entities;
+      if (detail.length > 0) {
+        let formattedDetail = [];
+        for (var i=0; i<detail.length; i++) {
+          let enabled = this.getValuesForKey(detail[i].tags, 'enabled');
+          let id = this.getValuesForKey(detail[i].tags, 'id');
+          let polId = this.getValuesForKey(detail[i].tags, 'policyId');
+          let type = this.getValuesForKey(detail[i].tags, 'type');
+
+          let aCondition = {'name': detail[i].name, 'guid': detail[i].guid, 'enabled': enabled, 'id': id, 'policyId': polId, 'type': type};
+
+          formattedDetail.push(aCondition);
+        }
+        return formattedDetail;
+      }
+    }
+  }
+
+  getValuesForKey(tags, key) {
+    const tag = tags.find(tag => tag.key === key);
+    return tag ? tag.values[0] : null;
   }
 
   handleSort(clickedCol) {
@@ -132,8 +180,10 @@ export default class Entities extends React.Component {
     });
   }
 
-  async openDrilldownAndGetAlerts(r) {
-    let { openDrilldown, selectedEntity } = this.state;
+  async openDrilldownAndGetData(r) {
+    let { openDrilldown, selectedEntity, policies } = this.state;
+
+    let conditionDetail = [];
 
     await this.setState({
       openDrilldown: true,
@@ -141,12 +191,21 @@ export default class Entities extends React.Component {
       selectedEntity: r
     });
 
-    let alerts = await this.getAlerts(r);
+    let conditions = await this.getConditions(r);
+    if (conditions) {
+      conditionDetail = await this.getConditionDetail(conditions);
+      if (conditionDetail.length > 0) {
+        conditionDetail = conditionDetail.map(c => {
+          const pol = policies.find(p => p.id === c.policyId);
+          return {...c, policyName: pol ? pol.name : null };
+        });
+      }
+    }
 
     await this.setState({
-      entityAlertConfig: alerts,
+      entityAlertConfig: conditionDetail,
       fetchingAlerts: false
-    })
+    });
   }
 
   renderEntityTable() {
@@ -185,7 +244,7 @@ export default class Entities extends React.Component {
           }).map((row, e) => {
             return (
               <Table.Row key={e}>
-                <Table.Cell onClick={() => this.openDrilldownAndGetAlerts(row)}>
+                <Table.Cell onClick={() => this.openDrilldownAndGetData(row)}>
                 <a>{row.name}</a>
                 </Table.Cell>
                 <Table.Cell>{row.type}</Table.Cell>
@@ -202,7 +261,7 @@ export default class Entities extends React.Component {
   renderAlerts() {
     let { fetchingAlerts, entityAlertConfig, openDrilldown, selectedEntity } = this.state;
 
-    const alertHeaders = ['Policy', 'Condtion'];
+    const alertHeaders = ['Policy', 'Condition'];
 
     return (
       <>
@@ -227,9 +286,9 @@ export default class Entities extends React.Component {
                   return (
                     <Table.Row key={a}>
                       <Table.Cell>
-                      {row.facet[0]}
+                      {row.policyName}
                       </Table.Cell>
-                      <Table.Cell>{row.facet[1]}</Table.Cell>
+                      <Table.Cell>{row.name}</Table.Cell>
                     </Table.Row>
                   );
                 })}
@@ -249,7 +308,7 @@ export default class Entities extends React.Component {
         }
         {
           entityAlertConfig.length == 0 && !fetchingAlerts ?
-          <h4>This entity has not triggered any alerts in the past 6 months.</h4>
+          <h4>No conditions associated with this entity.</h4>
           :
           ''
         }
@@ -260,6 +319,7 @@ export default class Entities extends React.Component {
     )
   }
 
+//{this.renderAlerts()}
 
   render() {
     const { loading, openDrilldown, selectedEntity } = this.state;

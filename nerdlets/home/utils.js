@@ -48,7 +48,7 @@ module.exports = {
     `;
   }
   },
-  incidentCount: (selectedEntity) => {
+  conditionIds: (selectedEntity) => {
     let entityName = selectedEntity.name;
     let guid = selectedEntity.guid;
     let accountId = selectedEntity.accountId
@@ -56,12 +56,51 @@ module.exports = {
     {
       actor {
         account(id: ${accountId}) {
-          nrql(query: "SELECT latest(timestamp) as 'ts' FROM NrAiIncident facet policyName, conditionName where event = 'close' and (targetName like '%${entityName}%' or entity.guid = '${guid}') since 6 months ago LIMIT 500", timeout: 120) {
+          nrql(query: "FROM NrAiSignal SELECT uniques(conditionId, 5000) as 'conditions' where entity.guid = '${guid}' since 2 weeks ago", timeout: 120) {
             results
           }
         }
       }
     }
+    `;
+  },
+
+  conditionDetail: (conditions) => {
+    return `
+      {
+        actor {
+          entitySearch(query: "type='CONDITION' and tags.id in ${conditions}") {
+            results {
+              entities {
+                name
+                tags {
+                  key
+                  values
+                }
+              }
+            }
+          }
+        }
+      }
+    `;
+  },
+
+  policies: (accountId) => {
+    return `
+      {
+        actor {
+          account(id: ${accountId}) {
+            alerts {
+              policiesSearch {
+                policies {
+                  id
+                  name
+                }
+              }
+            }
+          }
+        }
+      }
     `;
   }
 }
