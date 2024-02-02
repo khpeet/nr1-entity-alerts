@@ -31,8 +31,25 @@ export default class Entities extends React.Component {
   async componentDidMount() {
     let cursor = null;
     let allEntities = [];
+
     await this.getEntities(cursor, allEntities);
-    await this.getPolicies(2981243);
+    await this.getPolicies(this.props.account);
+  }
+
+  async componentDidUpdate(prevProps) {
+    let cursor = null;
+    let allEntities = [];
+
+    if (prevProps.account !== this.props.account) {
+      await this.setState({ selectedAccount: this.props.account, loading: true, selectedEntity: null });
+
+      if (this.props.account !== null) {
+        await this.getEntities(cursor, allEntities);
+        await this.getPolicies(this.props.account);
+      }
+
+      await this.setState({ loading: false });
+    }
   }
 
   handleChange(e, { value }) {
@@ -64,7 +81,7 @@ export default class Entities extends React.Component {
     return (
       <div>
         <Dropdown
-          style={{ marginBottom: '6px' }}
+          style={{ marginBottom: '6px', marginTop: '10px' }}
           placeholder="Entity Type Filter"
           multiple
           search
@@ -78,6 +95,7 @@ export default class Entities extends React.Component {
 
   async getPolicies(acct) {
     let res = await NerdGraphQuery.query({query: query.policies(acct)});
+    console.log(query.policies(acct))
 
     if (res.errors) {
       console.debug(`Failed to retrieve policies`);
@@ -89,7 +107,8 @@ export default class Entities extends React.Component {
   }
 
   async getEntities(c, allEntities) {
-    let res = await NerdGraphQuery.query({query: query.allEntities(c)});
+    let currentAccount = this.props.account;
+    let res = await NerdGraphQuery.query({query: query.allEntities(currentAccount, c)});
 
     if (res.errors) {
       console.debug(`Failed to retrieve entities`);
@@ -130,7 +149,8 @@ export default class Entities extends React.Component {
   }
 
   async getConditionDetail(conditions) {
-    let res = await NerdGraphQuery.query({query: query.conditionDetail(conditions)});
+    let currentAccount = this.props.account;
+    let res = await NerdGraphQuery.query({query: query.conditionDetail(currentAccount, conditions)});
 
     if (res.errors) {
       console.debug(`Failed to retrieve condition detail`);

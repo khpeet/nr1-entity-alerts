@@ -1,10 +1,10 @@
 module.exports = {
-  allEntities: (cursor) => {
+  allEntities: (accountId, cursor) => {
     if (cursor == null) {
       return `
         {
         actor {
-          entitySearch(query: "reporting='true' and alertSeverity != 'NOT_CONFIGURED' and type not in ('DASHBOARD', 'WORKFLOW', 'CONDITION', 'SECURE_CRED', 'ENDPOINT', 'ISSUE', 'POLICY')") {
+          entitySearch(query: "accountId = ${accountId} and reporting='true' and alertSeverity != 'NOT_CONFIGURED' and type not in ('DASHBOARD', 'WORKFLOW', 'CONDITION', 'SECURE_CRED', 'ENDPOINT', 'ISSUE', 'POLICY')") {
             counts(facet: TYPE) {
               facet
               count
@@ -27,7 +27,7 @@ module.exports = {
     return `
       {
         actor {
-          entitySearch(query: "reporting='true' and alertSeverity != 'NOT_CONFIGURED' and type not in ('DASHBOARD', 'WORKFLOW', 'CONDITION', 'SECURE_CRED', 'ENDPOINT', 'ISSUE', 'POLICY')") {
+          entitySearch(query: "accountId = ${accountId} and reporting='true' and alertSeverity != 'NOT_CONFIGURED' and type not in ('DASHBOARD', 'WORKFLOW', 'CONDITION', 'SECURE_CRED', 'ENDPOINT', 'ISSUE', 'POLICY')") {
             counts(facet: TYPE) {
               facet
               count
@@ -65,11 +65,11 @@ module.exports = {
     `;
   },
 
-  conditionDetail: (conditions) => {
+  conditionDetail: (accountId, conditions) => {
     return `
       {
         actor {
-          entitySearch(query: "type='CONDITION' and tags.id in ${conditions}") {
+          entitySearch(query: "accountId = ${accountId} and type='CONDITION' and tags.id in ${conditions}") {
             results {
               entities {
                 name

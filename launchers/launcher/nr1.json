@@ -2,6 +2,6 @@
   "schemaType": "LAUNCHER",
   "id": "launcher",
   "displayName": "Entity-Alert Mapper",
-  "description": "Determine alert policy/conditions for a given entity based on past incident data.",
+  "description": "Determine alert policy/conditions for a given entity based on condition signal data.",
   "rootNerdletId": "home"
 }
