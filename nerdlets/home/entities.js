@@ -361,6 +361,7 @@ export default class Entities extends React.Component {
           placeholder="Search Entities..."
           onChange={e => this.setState({ searchText: e.target.value })}
         />
+        <h4 style={{display: 'inline', marginLeft: '15px'}}>Below table is a list of alertable entities in selected account. Click an entity to see what policies/conditions are targeting that entity currently.</h4>
         &nbsp;&nbsp;&nbsp;
         {this.renderEntityTable()}
         {this.renderAlerts()}
